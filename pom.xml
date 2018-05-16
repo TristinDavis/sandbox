@@ -10,6 +10,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>apache_beam</module>
+        <module>kafka_streams</module>
     </modules>
 
 

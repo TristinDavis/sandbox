@@ -38,14 +38,17 @@ import java.util.concurrent.CountDownLatch;
  */
 public class WordCount {
 
+    public static final String INPUT_TOPIC = "streams-plaintext-input";
+    public static final String OUTPUT_TOPIC = "streams-wordcount-output";
+
     public static KStream<String, String> createStream(StreamsBuilder builder) {
-        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
                 .groupBy((key, value) -> value)
                 .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))
                 .toStream()
-                .to("streams-wordcount-output", Produced.with(Serdes.String(), Serdes.Long()));
+                .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
         return stream;
     }
 

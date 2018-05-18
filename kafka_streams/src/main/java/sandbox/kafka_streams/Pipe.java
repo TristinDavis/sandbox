@@ -33,10 +33,13 @@ import java.util.concurrent.CountDownLatch;
  */
 public class Pipe {
 
+    public static final String INPUT_TOPIC = "streams-plaintext-input";
+    public static final String OUTPUT_TOPIC = "streams-pipe-output";
+
     public static KStream<String, String> createStream(StreamsBuilder builder) {
-        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream.
-                to("streams-pipe-output");
+                to(OUTPUT_TOPIC);
         return stream;
     }
 

@@ -38,25 +38,33 @@ import java.util.concurrent.CountDownLatch;
  */
 public class WordCount {
 
-    public static void main(String[] args) throws Exception {
+    public static KStream<String, String> createStream(StreamsBuilder builder) {
+        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        stream
+                .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
+                .groupBy((key, value) -> value)
+                .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))
+                .toStream()
+                .to("streams-wordcount-output", Produced.with(Serdes.String(), Serdes.Long()));
+        return stream;
+    }
+
+    public static Properties createProps() {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        return props;
+    }
 
+    public static void main(String[] args) throws Exception {
         final StreamsBuilder builder = new StreamsBuilder();
 
-        KStream<String, String> stream = builder.stream("streams-plaintext-input");
-        stream
-               .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
-               .groupBy((key, value) -> value)
-               .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))
-               .toStream()
-               .to("streams-wordcount-output", Produced.with(Serdes.String(), Serdes.Long()));
+        createStream(builder);
 
         final Topology topology = builder.build();
-        final KafkaStreams streams = new KafkaStreams(topology, props);
+        final KafkaStreams streams = new KafkaStreams(topology, createProps());
         final CountDownLatch latch = new CountDownLatch(1);
 
         // attach shutdown handler to catch control-c

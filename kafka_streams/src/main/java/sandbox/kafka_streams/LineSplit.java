@@ -22,7 +22,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.ValueMapper;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -39,12 +38,12 @@ public class LineSplit {
     public static final String INPUT_TOPIC = "streams-plaintext-input";
     public static final String OUTPUT_TOPIC = "streams-linesplit-output";
 
-    public static KStream<String, String> createStream(StreamsBuilder builder) {
+    public static StreamsBuilder buildStream(StreamsBuilder builder) {
         KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream
                 .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
                 .to(OUTPUT_TOPIC);
-        return stream;
+        return builder;
     }
 
     public static Properties createProps() {
@@ -57,10 +56,7 @@ public class LineSplit {
     }
 
     public static void main(String[] args) throws Exception {
-        final StreamsBuilder builder = new StreamsBuilder();
-
-        createStream(builder);
-
+        final StreamsBuilder builder = buildStream(new StreamsBuilder());
         final Topology topology = builder.build();
         final KafkaStreams streams = new KafkaStreams(topology, createProps());
         final CountDownLatch latch = new CountDownLatch(1);

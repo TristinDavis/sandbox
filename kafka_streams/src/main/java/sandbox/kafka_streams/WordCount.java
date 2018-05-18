@@ -22,7 +22,9 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 
 import java.util.Arrays;
@@ -41,7 +43,7 @@ public class WordCount {
     public static final String INPUT_TOPIC = "streams-plaintext-input";
     public static final String OUTPUT_TOPIC = "streams-wordcount-output";
 
-    public static KStream<String, String> createStream(StreamsBuilder builder) {
+    public static StreamsBuilder buildStream(StreamsBuilder builder) {
         KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
@@ -49,7 +51,7 @@ public class WordCount {
                 .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))
                 .toStream()
                 .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
-        return stream;
+        return builder;
     }
 
     public static Properties createProps() {
@@ -62,10 +64,7 @@ public class WordCount {
     }
 
     public static void main(String[] args) throws Exception {
-        final StreamsBuilder builder = new StreamsBuilder();
-
-        createStream(builder);
-
+        final StreamsBuilder builder = buildStream(new StreamsBuilder());
         final Topology topology = builder.build();
         final KafkaStreams streams = new KafkaStreams(topology, createProps());
         final CountDownLatch latch = new CountDownLatch(1);

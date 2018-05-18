@@ -13,7 +13,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster;
 import org.apache.kafka.streams.integration.utils.IntegrationTestUtils;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -68,8 +70,7 @@ public class WordCountIntegrationTest {
         //
         // Step 1: Configure and start the processor topology.
         //
-        StreamsBuilder builder = new StreamsBuilder();
-        WordCount.createStream(builder);
+        StreamsBuilder builder = WordCount.buildStream(new StreamsBuilder());
 
         Properties streamsConfiguration = WordCount.createProps();
         streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());

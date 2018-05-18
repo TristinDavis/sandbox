@@ -22,10 +22,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueMapper;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 
 import java.util.Arrays;
@@ -50,7 +47,8 @@ public class WordCount {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        builder.<String, String>stream("streams-plaintext-input")
+        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        stream
                .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
                .groupBy((key, value) -> value)
                .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))

@@ -21,6 +21,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.KStream;
 
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -41,7 +42,8 @@ public class Pipe {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        builder.<String, String>stream("streams-plaintext-input").to("streams-pipe-output");
+        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        stream.to("streams-pipe-output");
 
         final Topology topology = builder.build();
         final KafkaStreams streams = new KafkaStreams(topology, props);

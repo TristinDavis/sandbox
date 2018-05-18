@@ -21,6 +21,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.ValueMapper;
 
 import java.util.Arrays;
@@ -44,7 +45,8 @@ public class LineSplit {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        builder.<String, String>stream("streams-plaintext-input")
+        KStream<String, String> stream = builder.stream("streams-plaintext-input");
+        stream
                .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
                .to("streams-linesplit-output");
 

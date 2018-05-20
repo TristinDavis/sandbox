@@ -17,7 +17,6 @@
 package sandbox.kafka_streams;
 
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
@@ -25,7 +24,6 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.state.KeyValueStore;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -43,15 +41,16 @@ public class WordCount {
     public static final String INPUT_TOPIC = "streams-plaintext-input";
     public static final String OUTPUT_TOPIC = "streams-wordcount-output";
 
-    public static StreamsBuilder buildStream(StreamsBuilder builder) {
+    public static Topology createTopology() {
+        StreamsBuilder builder = new StreamsBuilder();
         KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split("\\W+")))
                 .groupBy((key, value) -> value)
-                .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as("counts-store"))
+                .count(Materialized.as("counts-store"))
                 .toStream()
                 .to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
-        return builder;
+        return builder.build();
     }
 
     public static Properties createProps() {
@@ -64,9 +63,7 @@ public class WordCount {
     }
 
     public static void main(String[] args) throws Exception {
-        final StreamsBuilder builder = buildStream(new StreamsBuilder());
-        final Topology topology = builder.build();
-        final KafkaStreams streams = new KafkaStreams(topology, createProps());
+        final KafkaStreams streams = new KafkaStreams(createTopology(), createProps());
         final CountDownLatch latch = new CountDownLatch(1);
 
         // attach shutdown handler to catch control-c

@@ -36,11 +36,12 @@ public class Pipe {
     public static final String INPUT_TOPIC = "streams-plaintext-input";
     public static final String OUTPUT_TOPIC = "streams-pipe-output";
 
-    public static StreamsBuilder buildStream(StreamsBuilder builder) {
+    public static Topology createTopology() {
+        StreamsBuilder builder = new StreamsBuilder();
         KStream<String, String> stream = builder.stream(INPUT_TOPIC);
         stream.
                 to(OUTPUT_TOPIC);
-        return builder;
+        return builder.build();
     }
 
     public static Properties createProps() {
@@ -53,9 +54,7 @@ public class Pipe {
     }
 
     public static void main(String[] args) throws Exception {
-        final StreamsBuilder builder = buildStream(new StreamsBuilder());
-        final Topology topology = builder.build();
-        final KafkaStreams streams = new KafkaStreams(topology, createProps());
+        final KafkaStreams streams = new KafkaStreams(createTopology(), createProps());
         final CountDownLatch latch = new CountDownLatch(1);
 
         // attach shutdown handler to catch control-c

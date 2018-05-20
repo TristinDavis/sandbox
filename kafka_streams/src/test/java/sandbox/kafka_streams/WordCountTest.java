@@ -4,7 +4,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.test.ConsumerRecordFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,10 +21,10 @@ public class WordCountTest {
 
     @Test
     public void shouldCountWords() {
-        Topology topology = WordCount.buildStream(new StreamsBuilder()).build();
-        Properties config = WordCount.createProps();
-        config.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
-        TopologyTestDriver testDriver = new TopologyTestDriver(topology, config);
+        Topology topology = WordCount.createTopology();
+        Properties props = WordCount.createProps();
+        props.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
+        TopologyTestDriver testDriver = new TopologyTestDriver(topology, props);
 
         ConsumerRecordFactory<String, String> factory = new ConsumerRecordFactory<>(
                 WordCount.INPUT_TOPIC,

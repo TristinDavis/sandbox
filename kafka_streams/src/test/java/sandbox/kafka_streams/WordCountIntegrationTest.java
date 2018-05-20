@@ -9,8 +9,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster;
 import org.apache.kafka.streams.integration.utils.IntegrationTestUtils;
 import org.junit.BeforeClass;
@@ -70,14 +70,13 @@ public class WordCountIntegrationTest {
         //
         // Step 1: Configure and start the processor topology.
         //
-        StreamsBuilder builder = WordCount.buildStream(new StreamsBuilder());
+        Topology topology = WordCount.createTopology();
+        Properties props = WordCount.createProps();
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
+        props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
+        props.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
 
-        Properties streamsConfiguration = WordCount.createProps();
-        streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
-        streamsConfiguration.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 1000);
-        streamsConfiguration.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
-
-        KafkaStreams streams = new KafkaStreams(builder.build(), streamsConfiguration);
+        KafkaStreams streams = new KafkaStreams(topology, props);
         streams.start();
 
         //

@@ -3,7 +3,10 @@ package sandbox.kafka_streams;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.test.ConsumerRecordFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,10 +20,10 @@ public class LineSplitTest {
 
     @Test
     public void shouldSplitLines() {
-        Topology topology = LineSplit.buildStream(new StreamsBuilder()).build();
-        Properties config = LineSplit.createProps();
-        config.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
-        TopologyTestDriver testDriver = new TopologyTestDriver(topology, config);
+        Topology topology = LineSplit.createTopology();
+        Properties props = LineSplit.createProps();
+        props.put(StreamsConfig.STATE_DIR_CONFIG, org.apache.kafka.test.TestUtils.tempDirectory().getAbsolutePath());
+        TopologyTestDriver testDriver = new TopologyTestDriver(topology, props);
 
         ConsumerRecordFactory<String, String> factory = new ConsumerRecordFactory<>(
                 LineSplit.INPUT_TOPIC,
@@ -46,7 +49,7 @@ public class LineSplitTest {
         expectedValues.add("Kafka");
         expectedValues.add("Summit");
 
-        List<String> actualValues= new ArrayList<>();
+        List<String> actualValues = new ArrayList<>();
         while (true) {
             ProducerRecord<String, String> outputRecord = testDriver.readOutput(
                     LineSplit.OUTPUT_TOPIC,
